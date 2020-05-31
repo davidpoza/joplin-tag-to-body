@@ -26,9 +26,12 @@ function searchTagId(tagTitle) {
       .then((res) => res.json())
       .then((data) => {
         console.log('searching tag id for tag title: ', tagTitle);
-        const tagId = data[0].id;
-        console.log('> result: ', tagId);
-        return (Promise.resolve(tagId));
+        if (data && data.length >= 1) {
+          const tagId = data[0].id;
+          console.log('> result: ', tagId);
+          return (Promise.resolve(tagId));
+        }
+        return (Promise.reject('Error: tag ', tagTitle, ' not found.'));
       })
   );
 }
@@ -45,7 +48,7 @@ function createTag(title) {
     'token=',
     process.env.API_KEY,
   ].join('');
-  const tagName = slugify(title, { lower: true});
+  const tagName = slugify(title, { remove: /[*+~.():;'"!@]/g, lower: true});
 
   return (
     fetch(url, {
@@ -88,7 +91,7 @@ function assignTagToNote(tagId, noteId, noteTitle) {
     'tags/',
     tagId,
     '/notes',
-    'token=',
+    '?token=',
     process.env.API_KEY,
   ].join('');
 
