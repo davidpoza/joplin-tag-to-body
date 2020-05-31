@@ -17,3 +17,14 @@ NOTEBOOK=folder (optional)
 # Get Authorization token
 Go Joplin > Tools > Options
 ![image](https://user-images.githubusercontent.com/5300774/83358479-245f9880-a374-11ea-8951-a9e837cc2012.png)
+
+# Changes on userchrome.css
+Just for allowing many more tags and longer, I recommend to add this css line applied to tag list:
+```
+.tag-list {
+  overflow-x: auto;
+}
+```
+
+That's the result:
+![Peek 2020-05-31 19-47](https://user-images.githubusercontent.com/5300774/83359006-a4d3c880-a377-11ea-8833-4f04a9667456.gif)
