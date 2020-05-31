@@ -114,12 +114,47 @@ function assignTagToNote(tagId, noteId, noteTitle) {
 }
 
 /**
- * Run all over all joplin notes, assigning each one a tag named as its own title
+ * Returns folder id to given folder title.
+ * @param {string} folderTitle
+ * @return {string} folder id
  */
-function fetchAllNotes() {
+function getFolderId(folderTitle) {
   const url = [
     server,
-    'notes?',
+    'search?',
+    'token=',
+    process.env.API_KEY,
+    '&query=',
+    `*${folderTitle}*`, // use wildcard just to catch title with icons
+    '&type=',
+    'folder',
+  ].join('');
+
+  return (
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('searching folder title for title: ', folderTitle);
+        if (data && data.length >= 1) {
+          const folderId = data[0].id;
+          console.log('> result: ', folderId);
+          return (Promise.resolve(folderId));
+        }
+        return (Promise.reject('Error: folder ', folderTitle, ' not found.'));
+      })
+  );
+}
+
+/**
+ * Run all over all joplin notes in specified folder.
+ * If not folderId is provided then fetches all notes.
+ * Then assigns each one a tag named as its own title.
+ * @param {string} folderId if folder id is given then applies tags only for notes contained in this.
+ */
+function fetchAllNotes(folderId) {
+  const url = [
+    server,
+    folderId ? `folders/${folderId}/notes?` : 'notes?',
     'token=',
     process.env.API_KEY,
   ].join('');
@@ -140,4 +175,7 @@ function fetchAllNotes() {
     })
 }
 
-fetchAllNotes();
+getFolderId(process.env.NOTEBOOK)
+  .then((folderId) => {
+    fetchAllNotes(folderId);
+  })
