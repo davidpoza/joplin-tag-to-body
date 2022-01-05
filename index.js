@@ -145,37 +145,47 @@ function getFolderId(folderTitle) {
   );
 }
 
+/*returns a string like "#tag1 #complex-tag #another-tag" */
+async function getNoteTags(noteId) {
+  const url = [
+    server,
+    `notes/${noteId}/tags`,
+    '?token=',
+    process.env.API_KEY,
+  ].join('');
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data.items) return '';
+  return data.items.reduce((prev, curr) => {
+    return (`${prev} #${curr.title.replace(/ /g, '-')}`);
+  }, '');
+}
+
 /**
  * Run all over all joplin notes in specified folder.
  * If not folderId is provided then fetches all notes.
- * Then assigns each one a tag named as its own title.
- * @param {string} folderId if folder id is given then applies tags only for notes contained in this.
+ * @param {string} folderId
  */
-function fetchAllNotes(folderId) {
+async function fetchAllNotes(folderId) {
   const url = [
     server,
     folderId ? `folders/${folderId}/notes?` : 'notes?',
     'token=',
     process.env.API_KEY,
+    '&fields=id,body',
+    '&limit=100',
+    '&page=3'
   ].join('');
 
-  fetch(url)
-    .then((res) => res.json())
-    .then((data) => {
-      data.forEach((note) => {
-        const { id: noteId, title: noteTitle } = note;
-        createTag(noteTitle)
-          .then((tagId) => {
-            assignTagToNote(tagId, noteId, noteTitle);
-          })
-          .catch((err) => {
-            console.log('ERROR: ', err);
-          })
-      });
-    })
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.items;
 }
 
-getFolderId(process.env.NOTEBOOK)
-  .then((folderId) => {
-    fetchAllNotes(folderId);
-  })
+(async () => {
+  const notes = await fetchAllNotes();
+  notes.forEach(async (note) => {
+    const tags = await getNoteTags(note.id);
+    console.log(tags);
+  });
+})();
