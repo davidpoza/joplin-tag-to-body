@@ -65,12 +65,16 @@ function updateNoteBody(noteId, newBody) {
 (async () => {
   let total = 0;
   let pageNum = 1;
+  const processed = {}; // to avoid repeated additions, since API returns repeated results
   let res = { items: [], has_more: true };
+
   do {
     console.log(`retrieving page: ${pageNum}`);
     res = await getAllNotes(null, pageNum);
     total += res.items.length;
 		res.items.forEach(async (note) => {
+      if (processed[note.id]) return;
+      processed[note.id] = true;
       const oldBody = note.body;
       const tags = await getNoteTags(note.id);
       const newBody = `${tags}\n${oldBody}`;
@@ -82,6 +86,7 @@ function updateNoteBody(noteId, newBody) {
         return;
       }
     });
+    res.items = [];
     pageNum++;
 	} while (res.has_more);
   console.log(`SUCCESS!. ${total} notes were tagged.`)
